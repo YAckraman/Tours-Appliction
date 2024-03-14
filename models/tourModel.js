@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Users = require('./userModel');
 const tourschema = new mongoose.Schema(
   {
     name: {
@@ -58,6 +59,35 @@ const tourschema = new mongoose.Schema(
       select: false,
     },
     startDates: [Date],
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      description: String,
+      coordinates: [Number],
+      address: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        description: String,
+        coordinates: [Number],
+        address: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Users',
+      },
+    ],
     secretTour: {
       type: Boolean,
       default: false,
@@ -68,8 +98,18 @@ const tourschema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
 tourschema.virtual('durationInWeeks').get(function () {
   return (this.duration / 7).toFixed(3);
+});
+tourschema.virtual('reviews', {
+  ref: 'review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+tourschema.pre(/^find/, function (next) {
+  this.populate({ path: 'guides', select: 'name email' });
+  next();
 });
 tourschema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });

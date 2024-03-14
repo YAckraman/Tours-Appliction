@@ -94,7 +94,7 @@ exports.getAllTours = checkAsync(async (req, res, next) => {
   });
 });
 exports.getTourById = checkAsync(async (req, res, next) => {
-  const tour = await Tours.findById(req.params.id);
+  const tour = await Tours.findById(req.params.id).populate('reviews');
   if (!tour) {
     return next(new AppError(`no tour with that id`, 400));
   }

@@ -8,6 +8,7 @@ const tourRouter = require('./routers/tourRoute');
 const usersRouter = require('./routers/usersRoute');
 const AppError = require('./utils/AppError');
 const ErrorController = require('./errorController');
+const reviewRoute = require('./routers/reviewRoute');
 const app = express();
 
 const limiter = rateLimit({
@@ -44,6 +45,7 @@ app.use(express.json({ limit: '300kb' }));
 app.use(express.static(`${__dirname}/public`));
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/review', reviewRoute);
 app.all('*', (req, res, next) => {
   //   const err = new Error(`that url ${req.originalUrl} is not on the server`);
   //   err.status = 'fail';

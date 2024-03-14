@@ -11,8 +11,10 @@ const {
   planPerYear,
 } = require('../controllers/tourController');
 const { protect, authorizeTo } = require('../controllers/authController');
+const reviewRoute = require('./reviewRoute');
 
 // tourRouter.param('id', checkId);
+tourRouter.use('/:tourId/reviews', reviewRoute);
 tourRouter.route('/tours-stats').get(getStats);
 tourRouter.route('/plan/:year').get(planPerYear);
 tourRouter.route('/top-5-tours').get(getBest5Tours, getAllTours);
