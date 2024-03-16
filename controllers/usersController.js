@@ -1,6 +1,8 @@
+const { update } = require('../models/reviewModel');
 const Users = require('../models/userModel');
 const AppError = require('../utils/AppError');
 const chechAsync = require('../utils/chechAsync');
+const { deleteOne, updateOne, getAll, getOne } = require('./factorController');
 
 const Objectfilter = function (obj, ...fields) {
   const filter = {};
@@ -39,37 +41,19 @@ exports.deleteAccount = chechAsync(async (req, res, next) => {
     data: null,
   });
 });
-exports.getAllUsers = chechAsync(async (req, res) => {
-  const users = await Users.find();
-  res.status(200).json({
-    status: 'success',
-    result: users.length,
-    data: {
-      users,
-    },
-  });
-});
+exports.getCurrentUser = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+exports.getMe = getOne(Users);
 exports.addUser = (req, res) => {
   res.status(505).json({
     status: 'error',
-    message: 'Inernal Server Error',
+    message: 'not valid path,please use /sign up',
   });
 };
-exports.getUserById = (req, res) => {
-  res.status(505).json({
-    status: 'error',
-    message: 'Inernal Server Error',
-  });
-};
-exports.updateUser = (req, res) => {
-  res.status(505).json({
-    status: 'error',
-    message: 'Inernal Server Error',
-  });
-};
-exports.deleteUser = (req, res) => {
-  res.status(505).JSON({
-    status: 'error',
-    message: 'Inernal Server Error',
-  });
-};
+exports.getUserById = getOne(Users);
+exports.getAllUsers = getAll(Users);
+//do not use for password change
+exports.updateUser = updateOne(Users);
+exports.deleteUser = deleteOne(Users);

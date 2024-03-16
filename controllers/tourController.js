@@ -2,6 +2,13 @@ const AppError = require('../utils/AppError');
 const Tours = require('./../models/tourModel');
 const apiFeatures = require('./../utils/apiFeatures');
 const checkAsync = require('./../utils/chechAsync');
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getAll,
+  getOne,
+} = require('./factorController');
 //CONTROLE THE TOP-5-TOURS REQOBJECT
 
 exports.getBest5Tours = (req, res, next) => {
@@ -76,66 +83,9 @@ exports.planPerYear = checkAsync(async (req, res, next) => {
   });
 });
 // Parse JSON bodies
-exports.getAllTours = checkAsync(async (req, res, next) => {
-  let features = new apiFeatures(Tours.find(), req.query)
-    .filter()
-    .sort()
-    .filterFields()
-    .pagination();
 
-  const tours = await features.query;
-
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
-exports.getTourById = checkAsync(async (req, res, next) => {
-  const tour = await Tours.findById(req.params.id).populate('reviews');
-  if (!tour) {
-    return next(new AppError(`no tour with that id`, 400));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-exports.addTour = checkAsync(async (req, res, next) => {
-  const newTour = await Tours.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tours: newTour,
-    },
-  });
-});
-exports.updateTour = checkAsync(async (req, res, next) => {
-  const tour = await Tours.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!tour) {
-    return next(new AppError(`no tour with that id`, 400));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-exports.deleteTour = checkAsync(async (req, res, next) => {
-  const tour = await Tours.findByIdAndDelete(req.params.id);
-  if (!tour) {
-    return next(new AppError(`no tour with that id`, 400));
-  }
-  res.status(204).json({
-    status: 'success',
-    data: 'null',
-  });
-});
+exports.getTourById = getOne(Tours, { path: 'reviews' });
+exports.getAllTours = getAll(Tours);
+exports.addTour = createOne(Tours);
+exports.updateTour = updateOne(Tours);
+exports.deleteTour = deleteOne(Tours);

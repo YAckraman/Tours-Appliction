@@ -16,11 +16,18 @@ const reviewRoute = require('./reviewRoute');
 // tourRouter.param('id', checkId);
 tourRouter.use('/:tourId/reviews', reviewRoute);
 tourRouter.route('/tours-stats').get(getStats);
-tourRouter.route('/plan/:year').get(planPerYear);
+tourRouter
+  .route('/plan/:year')
+  .get(protect, authorizeTo('admin', 'lead-guide', 'guide'), planPerYear);
 tourRouter.route('/top-5-tours').get(getBest5Tours, getAllTours);
 tourRouter
   .route('/')
-  .get(protect, authorizeTo('admin', 'lead-guide'), getAllTours)
-  .post(addTour);
-tourRouter.route('/:id').get(getTourById).patch(updateTour).delete(deleteTour);
+  .get(getAllTours)
+  .post(protect, authorizeTo('admin', 'lead-guide'), addTour);
+tourRouter
+  .route('/:id')
+  .get(getTourById)
+  .patch(protect, authorizeTo('admin', 'lead-guide'), updateTour)
+  .delete(protect, authorizeTo('admin', 'lead-guide'), deleteTour);
+
 module.exports = tourRouter;

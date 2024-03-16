@@ -8,6 +8,8 @@ const {
   deleteUser,
   updateAccount,
   deleteAccount,
+  getCurrentUser,
+  getMe,
 } = require('../controllers/usersController');
 const {
   signup,
@@ -16,14 +18,19 @@ const {
   resetPassword,
   protect,
   updatePassword,
+  authorizeTo,
 } = require('../controllers/authController');
+
 usersRouter.post('/signup', signup);
 usersRouter.post('/login', login);
 usersRouter.post('/forgetPassword', forgetPassword);
 usersRouter.patch('/resetPassword/:token', resetPassword);
-usersRouter.patch('/updatePassword', protect, updatePassword);
-usersRouter.patch('/updateAccount', protect, updateAccount);
-usersRouter.delete('/deleteAccount', protect, deleteAccount);
+usersRouter.use(protect);
+usersRouter.get('/me', getCurrentUser, getMe);
+usersRouter.patch('/updatePassword', updatePassword);
+usersRouter.patch('/updateAccount', updateAccount);
+usersRouter.delete('/deleteAccount', deleteAccount);
+usersRouter.use(authorizeTo('admin'));
 usersRouter.route('/').get(getAllUsers).post(addUser);
 usersRouter.route('/:id').get(getUserById).patch(updateUser).delete(deleteUser);
 module.exports = usersRouter;
