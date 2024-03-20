@@ -89,3 +89,56 @@ exports.getAllTours = getAll(Tours);
 exports.addTour = createOne(Tours);
 exports.updateTour = updateOne(Tours);
 exports.deleteTour = deleteOne(Tours);
+exports.getToursWithinGeo = checkAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  console.log(distance, latlng, unit);
+  const [lat, lng] = latlng.split(',');
+  const raduis = unit === 'mi' ? distance / 3963.19 : distance / 6378.13;
+  if (!lat || !lng) {
+    return next(new AppError('please enter lat,lng in the correct order', 400));
+  }
+  const tours = await Tours.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], raduis] } },
+  });
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
+    },
+  });
+});
+exports.distanceBetweenLocationAndTours = checkAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const multi = unit === 'mi' ? 0.000621371 : 0.001;
+  const [lat, lng] = latlng.split(',');
+  if (!lat || !lng) {
+    return next(new AppError('please enter lat,lng in the correct order', 400));
+  }
+  const distance1 = await Tours.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multi,
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        duration: 1,
+        price: 1,
+        distance: 1,
+      },
+    },
+  ]);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distance1,
+    },
+  });
+});

@@ -9,10 +9,18 @@ const {
   getBest5Tours,
   getStats,
   planPerYear,
+  getToursWithinGeo,
+  distanceBetweenLocationAndTours,
 } = require('../controllers/tourController');
 const { protect, authorizeTo } = require('../controllers/authController');
 const reviewRoute = require('./reviewRoute');
-
+//route to search for tours in specific location
+tourRouter
+  .route('/toursWithin/distance/:distance/center/:latlng/unit/:unit')
+  .get(getToursWithinGeo);
+tourRouter
+  .route('/center/:latlng/unit/:unit')
+  .get(distanceBetweenLocationAndTours);
 // tourRouter.param('id', checkId);
 tourRouter.use('/:tourId/reviews', reviewRoute);
 tourRouter.route('/tours-stats').get(getStats);

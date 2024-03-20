@@ -25,7 +25,7 @@ const tourschema = new mongoose.Schema(
       type: String,
       required: [true, 'a tour must have a difficulty'],
       enum: {
-        values: ['easy', 'meduim', 'difficult'],
+        values: ['easy', 'medium', 'difficult'],
         message: 'value must be easy , meduim or difficult',
       },
     },
@@ -98,7 +98,8 @@ const tourschema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
-
+tourschema.index({ price: 1, ratingsAverage: -1 });
+tourschema.index({ startLocation: '2dsphere' });
 tourschema.virtual('durationInWeeks').get(function () {
   return (this.duration / 7).toFixed(3);
 });
@@ -115,9 +116,9 @@ tourschema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   next();
 });
-tourschema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  next();
-});
+// tourschema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   next();
+// });
 const Tours = mongoose.model('Tour', tourschema);
 module.exports = Tours;

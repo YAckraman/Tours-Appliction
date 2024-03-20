@@ -84,6 +84,7 @@ exports.forgetPassword = checkAsync(async (req, res, next) => {
   }
   //generate a password token for the user
   const passwordToken = user.createPasswordChangeToken();
+
   //save the data with .save and that option to not generate validation error
   await user.save({ validateBeforeSave: false });
   //senf the email with the token first the link

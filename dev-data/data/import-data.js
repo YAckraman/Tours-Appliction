@@ -2,10 +2,16 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Tour = require('./../../models/tourModel');
+const User = require('./../../models/userModel');
+const Review = require('./../../models/reviewModel');
 dotenv.config({
   path: './config.env',
 });
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
+const reviews = JSON.parse(
+  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'),
+);
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -24,6 +30,8 @@ const con = mongoose
 const createData = async () => {
   try {
     const tour = await Tour.create(tours);
+    const user = await User.create(users, { validateBeforeSave: false });
+    const review = await Review.create(reviews);
     console.log('data is inserted');
   } catch (err) {
     console.log(err);
@@ -31,7 +39,14 @@ const createData = async () => {
 };
 const deleteData = async () => {
   try {
-    await Tour.remove();
+    const removed = await Promise.all([
+      Tour.deleteMany(),
+      User.deleteMany(),
+      Review.deleteMany(),
+    ]);
+    // await Tour.re();
+    // await User.deleteMany();
+
     console.log('data is deleted');
   } catch (err) {
     console.log(err);
