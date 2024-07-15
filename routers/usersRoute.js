@@ -19,10 +19,12 @@ const {
   protect,
   updatePassword,
   authorizeTo,
+  logout,
 } = require('../controllers/authController');
 
 usersRouter.post('/signup', signup);
 usersRouter.post('/login', login);
+usersRouter.get('/logout', logout);
 usersRouter.post('/forgetPassword', forgetPassword);
 usersRouter.patch('/resetPassword/:token', resetPassword);
 usersRouter.use(protect);

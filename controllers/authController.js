@@ -10,6 +10,31 @@ const tokenCreate = function (id) {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
+const sendToken = function (user, statusCode, res) {
+  //create a token for the user
+  const token = tokenCreate(user._id);
+  //specify cookies options
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true,
+  };
+  //if in deployment
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  //add the token to the cookies
+  res.cookie('jwt', token, cookieOptions);
+  //delete password from  the data
+  user.password = undefined;
+  //create the response
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+};
 exports.signup = checkAsync(async (req, res, next) => {
   const newUser = await Users.create({
     name: req.body.name,
@@ -19,12 +44,7 @@ exports.signup = checkAsync(async (req, res, next) => {
     //...(req.body.changedAt && { changedAt: req.body.changedAt }),
     role: req.body.role,
   });
-  const token = tokenCreate(newUser._id);
-  res.status(201).json({
-    status: 'success',
-    token,
-    user: newUser,
-  });
+  sendToken(newUser, 201, res);
 });
 exports.login = checkAsync(async (req, res, next) => {
   const { email, password } = req.body;
@@ -38,16 +58,28 @@ exports.login = checkAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('email or password is wrong'), 401);
   }
-  const token = tokenCreate(user._id);
+  sendToken(user, 200, res);
+});
+exports.logout = (req, res) => {
+  const cookieOptions = {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  };
+  res.cookie('jwt', 'logout', cookieOptions);
   res.status(200).json({
     status: 'success',
-    token,
   });
-});
+};
 exports.protect = checkAsync(async (req, res, next) => {
   let token;
-  if (req.headers.authorization.startsWith('Bearer')) {
+  // console.log(req.cookie.jwt);
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   if (!token) {
     return new AppError('you did not login. Please log in to continue', 401);
@@ -59,13 +91,42 @@ exports.protect = checkAsync(async (req, res, next) => {
   if (!currentUser) {
     return next(new AppError('user does not exist please login'), 401);
   }
+  //check if user changed the password
   if (currentUser.changedPassword(payload.iat)) {
     return next(new AppError('password is changed please login again', 401));
   }
   //pass user to the req Object for the next middleware
   req.user = currentUser;
-  //check if user changed the password
+  res.locals.user = currentUser;
 
+  next();
+});
+exports.isLogged = checkAsync(async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      let token = req.cookies.jwt;
+      const payload = await promisify(jwt.verify)(
+        token,
+        process.env.JWT_SECRET,
+      );
+
+      //check if user is still exist and not deleted
+      const currentUser = await Users.findById(payload.id);
+      if (!currentUser) {
+        return next();
+      }
+      //check if user changed the password
+      if (currentUser.changedPassword(payload.iat)) {
+        return next();
+      }
+      //pass user to the req Object for the next middleware
+      res.locals.user = currentUser;
+
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
   next();
 });
 exports.authorizeTo = (...roles) => {
@@ -140,11 +201,7 @@ exports.resetPassword = checkAsync(async (req, res, next) => {
   //save the data to the collection without options to run validator
   await user.save();
   //after saving login the user with a new token
-  const token = tokenCreate(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  sendToken(user, 200, res);
 });
 exports.updatePassword = checkAsync(async (req, res, next) => {
   //find user in documentation
@@ -160,9 +217,5 @@ exports.updatePassword = checkAsync(async (req, res, next) => {
   user.passwordConfirm = req.body.newPasswordConfirm;
   await user.save();
   //login the user with the new token and send the token
-  const token = tokenCreate(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  sendToken(user, 200, res);
 });

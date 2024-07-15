@@ -29,8 +29,8 @@ const con = mongoose
   });
 const createData = async () => {
   try {
-    const tour = await Tour.create(tours);
-    const user = await User.create(users, { validateBeforeSave: false });
+    //const tour = await Tour.create(tours);
+    //const user = await User.create(users, { validateBeforeSave: false });
     const review = await Review.create(reviews);
     console.log('data is inserted');
   } catch (err) {

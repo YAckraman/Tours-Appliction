@@ -62,6 +62,7 @@ exports.getAll = (Model) =>
   });
 exports.getOne = (Model, options) =>
   checkAsync(async (req, res, next) => {
+    console.log(req.originalUrl);
     let query = Model.findById(req.params.id);
     if (options) query = query.populate(options);
     const doc = await query;

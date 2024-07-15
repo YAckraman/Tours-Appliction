@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Users = require('./userModel');
+const slugify = require('slugify');
 const tourschema = new mongoose.Schema(
   {
     name: {
@@ -8,6 +9,16 @@ const tourschema = new mongoose.Schema(
       unique: true,
       minlength: [10, 'name must be at least 10 character'],
       maxlength: [20, 'name must not exceed 15 characters'],
+    },
+    slug: {
+      type: String,
+      default: function () {
+        return slugify(this.name, {
+          replacement: '-',
+          locale: 'en',
+          lower: true,
+        });
+      },
     },
     price: {
       type: Number,
@@ -98,6 +109,7 @@ const tourschema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+tourschema.index({ slug: 1 });
 tourschema.index({ price: 1, ratingsAverage: -1 });
 tourschema.index({ startLocation: '2dsphere' });
 tourschema.virtual('durationInWeeks').get(function () {
@@ -109,7 +121,7 @@ tourschema.virtual('reviews', {
   localField: '_id',
 });
 tourschema.pre(/^find/, function (next) {
-  this.populate({ path: 'guides', select: 'name email' });
+  this.populate({ path: 'guides', select: '-__v -changedAt' });
   next();
 });
 tourschema.pre(/^find/, function (next) {

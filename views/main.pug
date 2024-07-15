@@ -1,0 +1,20 @@
+doctype html 
+html
+    block header
+        head
+            meta(charset = 'UTF-8')
+            meta(http-equiv='Content-Type', content='width=device-width, initial-scale=1.0')
+            link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Lato:300,300i,700')
+            link(rel='stylesheet', href='/css/style.css')
+            title natours | #{title}
+            link(rel="shortcut icon", href="/img/favicon.png", type="image/x-icon")
+    body
+        include _header   
+
+        //CONTENT
+        block content 
+
+        include _footer
+        //- script(src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.js")
+        script(src="/js/mapbox.js")
+        script(src="/js/bundle.js")

@@ -35,11 +35,11 @@ const reviewSchema = mongoose.Schema(
 );
 reviewSchema.index({ user: 1, tour: 1 }, { unique: true });
 reviewSchema.pre(/^find/, function (next) {
-  // this.populate({ path: 'tour', select: 'name photo' }).populate({
-  //   path: 'user',
-  //   select: 'name duration price',
-  // });
-  this.populate({ path: 'tour', select: 'name duration price' });
+  this.populate({ path: 'tour', select: 'name duration' }).populate({
+    path: 'user',
+    select: 'name image',
+  });
+  // this.populate({ path: 'tour', select: 'name duration price' });
   next();
 });
 reviewSchema.statics.updateReviewStats = async function (tourId) {
